@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA SNIPER PRO v6 — Alertas em Tempo Real</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #0f172a;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-green: #22c55e;
+            --accent-blue: #3b82f6;
+            --accent-red: #ef4444;
+            --accent-yellow: #f59e0b;
+            --border-color: #334155;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #1a1f35 50%, var(--bg-primary) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo-emoji { font-size: 36px; }
+        .logo-title { font-size: 28px; font-weight: bold; background: linear-gradient(135deg, #22c55e, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .logo-sub { font-size: 12px; color: var(--text-secondary); }
+
+        .header-controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.inactive { background: var(--text-muted); animation: none; }
+
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* Buttons */
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .btn-primary { background: var(--accent-green); color: #000; }
+        .btn-primary:hover:not(:disabled) { background: #16a34a; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(34,197,94,0.3); }
+        .btn-primary:disabled { background: var(--text-muted); cursor: not-allowed; opacity: 0.5; }
+
+        .btn-secondary { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); }
+        .btn-secondary:hover { background: var(--border-color); }
+
+        .btn-icon { padding: 10px; border-radius: 8px; }
+
+        /* Cards */
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Form Elements */
+        .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+
+        label { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
+
+        input[type="password"], input[type="text"], input[type="tel"] {
+            padding: 14px 16px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        input:focus { outline: none; border-color: var(--accent-green); box-shadow: 0 0 0 3px rgba(34,197,94,0.1); }
+        input::placeholder { color: var(--text-muted); }
+
+        /* Grid Layouts */
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .config-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .config-section-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--accent-green);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Status Messages */
+        .status-message {
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+        }
+
+        .status-success { background: rgba(6,78,59,0.8); border: 1px solid var(--accent-green); color: #6ee7b7; }
+        .status-error { background: rgba(124,45,18,0.8); border: 1px solid var(--accent-red); color: #fdba74; }
+        .status-loading { background: rgba(12,74,110,0.8); border: 1px solid var(--accent-blue); color: #7dd3fc; }
+        .status-warning { background: rgba(120,53,15,0.8); border: 1px solid var(--accent-yellow); color: #fbbf24; }
+
+        .spinner {
+            display: inline-block;
+            width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Info Box */
+        .info-box {
+            background: rgba(12,74,110,0.5);
+            border: 1px solid var(--accent-blue);
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            color: #7dd3fc;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .info-box strong { color: var(--text-primary); }
+
+        /* Toggle Switch */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .toggle {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: var(--border-color);
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle.active { background: var(--accent-green); }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle.active::after { transform: translateX(24px); }
+
+        /* Game Cards */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 16px;
+        }
+
+        .game-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .game-card.selected { border-color: var(--accent-green); box-shadow: 0 0 20px rgba(34,197,94,0.2); }
+        .game-card:hover { border-color: var(--text-muted); }
+        .game-card.live { border-left: 4px solid var(--accent-red); }
+        .game-card.halftime { border-left: 4px solid var(--accent-yellow); }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .game-teams { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+        .game-teams span { color: var(--text-muted); }
+
+        .game-score {
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            margin: 16px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .game-score .team { min-width: 60px; }
+        .game-score .vs { color: var(--text-muted); font-size: 14px; }
+        .game-score .home { color: var(--accent-green); }
+        .game-score .away { color: var(--accent-blue); }
+
+        .game-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-live { background: var(--accent-red); color: white; animation: pulse 1.5s infinite; }
+        .badge-halftime { background: var(--accent-yellow); color: #000; animation: pulse 1.5s infinite; }
+        .badge-pre { background: #1e3a5f; color: #93c5fd; }
+        .badge-post { background: #064e3b; color: #6ee7b7; }
+
+        /* Score Table */
+        .score-table {
+            width: 100%;
+            font-size: 13px;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+
+        .score-table th { text-align: center; padding: 8px; color: var(--text-muted); font-weight: 500; }
+        .score-table td { text-align: center; padding: 8px; border-top: 1px solid var(--border-color); }
+        .score-table td:first-child { text-align: left; font-weight: 600; }
+        .score-table .winner { color: var(--accent-green); font-weight: 700; }
+
+        /* Analysis Section */
+        .analysis-card {
+            background: var(--bg-card);
+            border: 2px solid var(--accent-green);
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 20px;
+        }
+
+        .analysis-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .analysis-title { font-size: 20px; font-weight: 700; }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .analysis-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .analysis-section-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .over-title { color: var(--accent-yellow); }
+        .fav-title { color: var(--accent-blue); }
+
+        .criteria-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .criteria-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-card);
+            border-radius: 8px;
+            border-left: 3px solid transparent;
+        }
+
+        .criteria-item.met { border-left-color: var(--accent-green); }
+        .criteria-item.not-met { border-left-color: var(--accent-red); }
+        .criteria-item.pending { border-left-color: var(--text-muted); }
+
+        .criteria-icon {
+            width: 24px; height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .criteria-icon.met { background: var(--accent-green); color: #000; }
+        .criteria-icon.not-met { background: var(--accent-red); color: #fff; }
+        .criteria-icon.pending { background: var(--border-color); color: var(--text-muted); }
+
+        .criteria-text { flex: 1; }
+        .criteria-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+        .criteria-value { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+        /* Recommendation Box */
+        .recommendation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .rec-entrar { background: rgba(6,78,59,0.6); border: 2px solid var(--accent-green); }
+        .rec-considerar { background: rgba(59,130,246,0.2); border: 2px solid var(--accent-blue); }
+        .rec-aguardar { background: rgba(239,68,68,0.2); border: 2px solid var(--accent-red); }
+
+        .rec-label { font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; opacity: 0.7; margin-bottom: 8px; }
+        .rec-value { font-size: 28px; font-weight: 900; }
+
+        .rec-entrar .rec-value { color: #6ee7b7; }
+        .rec-considerar .rec-value { color: #93c5fd; }
+        .rec-aguardar .rec-value { color: #fca5a5; }
+
+        /* Alert Toast */
+        .alert-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #064e3b, #065f46);
+            border: 2px solid var(--accent-green);
+            border-radius: 12px;
+            padding: 20px 24px;
+            z-index: 9999;
+            max-width: 380px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .alert-toast-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .alert-toast-icon { font-size: 32px; }
+        .alert-toast-title { font-size: 16px; font-weight: 700; color: #6ee7b7; }
+        .alert-toast-subtitle { font-size: 12px; color: var(--text-secondary); }
+        .alert-toast-body { font-size: 13px; color: #d1fae5; line-height: 1.6; }
+
+        /* Alert History */
+        .alert-history {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .alert-item {
+            padding: 12px;
+            background: var(--bg-card);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--accent-green);
+            font-size: 13px;
+        }
+
+        .alert-item-time { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+        .alert-item-text { color: var(--text-primary); }
+
+        /* Empty State */
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+        .empty-state-icon { font-size: 64px; margin-bottom: 20px; }
+        .empty-state-title { font-size: 22px; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; }
+        .empty-state-text { font-size: 15px; }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+            font-size: 13px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 40px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header { flex-direction: column; align-items: flex-start; }
+            .games-grid { grid-template-columns: 1fr; }
+            .analysis-grid { grid-template-columns: 1fr; }
+            .game-score { font-size: 22px; }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        /* Hidden */
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <span class="logo-emoji">🏀</span>
+                <div>
+                    <div class="logo-title">NBA SNIPER PRO v6</div>
+                    <div class="logo-sub">Alertas em Tempo Real • WhatsApp & Telegram</div>
+                </div>
+            </div>
+            <div class="header-controls">
+                <div class="status-indicator">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span id="statusText">Aguardando início...</span>
+                </div>
+                <button class="btn-secondary btn-icon" onclick="toggleConfig()" title="Configurações">⚙️</button>
+                <button class="btn-secondary btn-icon" onclick="toggleHistory()" title="Histórico">📋</button>
+                <button class="btn-secondary btn-icon" onclick="requestNotificationPermission()" title="Notificações">🔔</button>
+            </div>
+        </header>
+
+        <!-- Info Box -->
+        <div class="info-box">
+            <span style="font-size:20px;">ℹ️</span>
+            <div>
+                <strong>Como funciona:</strong> O sistema monitora os jogos da NBA automaticamente. Quando um jogo entra no intervalo (halftime),
+                você recebe alertas no <strong>WhatsApp</strong> e <strong>Telegram</strong>.
+                <br><br>
+                <strong>Importante:</strong> Mantenha esta aba aberta no navegador para receber os alertas em tempo real.
+                As configurações são salvas automaticamente no seu navegador.
+            </div>
+        </div>
+
+        <!-- Status Container -->
+        <div id="statusContainer"></div>
+
+        <!-- Config Panel -->
+        <div class="card" id="configPanel">
+            <div class="card-title">⚙️ Configurações do Sistema</div>
+
+            <div class="config-grid">
+                <!-- WhatsApp Config -->
+                <div class="config-section">
+                    <div class="config-section-title">📱 WhatsApp (CallMeBot)</div>
+                    <div class="input-group">
+                        <label>Número de Telefone (WhatsApp)</label>
+                        <input type="tel" id="whatsappPhone" placeholder="5512981483790" value="5512981483790">
+                    </div>
+                    <div class="input-group">
+                        <label>API Key do CallMeBot</label>
+                        <input type="password" id="whatsappKey" placeholder="Sua chave da CallMeBot">
+                    </div>
+                    <button class="btn-secondary" onclick="testWhatsApp()" id="testWaBtn" style="width:100%; justify-content:center;">
+                        📲 Testar WhatsApp
+                    </button>
+                </div>
+
+                <!-- Telegram Config -->
+                <div class="config-section">
+                    <div class="config-section-title">✈️ Telegram</div>
+                    <div class="input-group">
+                        <label>Bot Token</label>
+                        <input type="password" id="telegramToken" placeholder="Ex: 123456789:AAFxxxxxxx">
+                    </div>
+                    <div class="input-group">
+                        <label>Chat ID</label>
+                        <input type="text" id="telegramChatId" placeholder="Seu Chat ID">
+                    </div>
+                    <button class="btn-secondary" onclick="testTelegram()" id="testTgBtn" style="width:100%; justify-content:center;">
+                        ✈️ Testar Telegram
+                    </button>
+                </div>
+
+                <!-- Odds API -->
+                <div class="config-section">
+                    <div class="config-section-title">🎲 The Odds API (Opcional)</div>
+                    <div class="input-group">
+                        <label>API Key</label>
+                        <input type="password" id="oddsApiKey" placeholder="Chave para odds de apostas">
+                    </div>
+                    <div class="toggle-container">
+                        <div class="toggle" id="soundToggle" onclick="toggleSound()"></div>
+                        <span>Som de alerta</span>
+                    </div>
+                    <div class="toggle-container">
+                        <div class="toggle active" id="notificationToggle" onclick="toggleNotifications()"></div>
+                        <span>Notificações do navegador</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top:20px; display:flex; gap:12px; flex-wrap:wrap;">
+                <button class="btn-primary" onclick="startMonitoring()" id="startBtn">
+                    ▶️ Iniciar Monitoramento
+                </button>
+                <button class="btn-secondary" onclick="stopMonitoring()" id="stopBtn" style="display:none;">
+                    ⏹️ Parar
+                </button>
+                <button class="btn-secondary" onclick="saveConfig()">
+                    💾 Salvar Configurações
+                </button>
+                <button class="btn-secondary" onclick="loadGames()">
+                    🔄 Atualizar Agora
+                </button>
+            </div>
+        </div>
+
+        <!-- Alert History Panel -->
+        <div class="card hidden" id="historyPanel">
+            <div class="card-title">📋 Histórico de Alertas</div>
+            <div class="alert-history" id="alertHistory">
+                <div class="empty-state">
+                    <div class="empty-state-text">Nenhum alerta enviado ainda</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Games Section -->
+        <div class="card" id="gamesCard" style="display:none;">
+            <div class="card-title">
+                📅 Jogos de Hoje
+                <span id="gamesCount" style="font-weight:normal; color:var(--text-muted); margin-left:10px;"></span>
+            </div>
+            <div class="games-grid" id="gamesContainer"></div>
+        </div>
+
+        <!-- Analysis Section -->
+        <div class="card hidden" id="analysisCard">
+            <div id="analysisContainer"></div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="card" id="emptyState">
+            <div class="empty-state">
+                <div class="empty-state-icon">🏀</div>
+                <div class="empty-state-title">Pronto para Monitorar</div>
+                <div class="empty-state-text">
+                    Configure suas chaves de API acima e clique em <strong>Iniciar Monitoramento</strong>.<br>
+                    Você receberá alertas automaticamente quando os jogos entrarem no intervalo.
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>NBA SNIPER PRO v6 — Desenvolvido para alertas em tempo real</p>
+            <p style="margin-top:8px; font-size:12px;">
+                Mantenha a aba aberta para receber alertas • Dados: ESPN API
+            </p>
+        </footer>
+    </div>
+
+    <!-- Alert Toast -->
+    <div id="alertToast" class="alert-toast hidden">
+        <div class="alert-toast-header">
+            <span class="alert-toast-icon">🏀</span>
+            <div>
+                <div class="alert-toast-title">ALERTA DE INTERVALO!</div>
+                <div class="alert-toast-subtitle">NBA SNIPER PRO</div>
+            </div>
+        </div>
+        <div class="alert-toast-body" id="alertToastBody"></div>
+    </div>
+
+<script>
+/* ============================================================
+   NBA SNIPER PRO v6 — Web Edition
+   - Monitoramento automático via ESPN
+   - Alertas WhatsApp + Telegram + Notificações
+   - LocalStorage para persistência
+   ============================================================ */
+
+// ==================== CONFIGURATION ====================
+const CONFIG = {
+    whatsapp: {
+        phone: '5512981483790', // Seu número já configurado
+        apiKey: ''
+    },
+    telegram: {
+        botToken: '',
+        chatId: ''
+    },
+    oddsApiKey: '',
+    soundEnabled: true,
+    notificationsEnabled: true
+};
+
+const ESPN_URL = 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard';
+const ODDS_URL = 'https://api.the-odds-api.com/v4/sports/basketball_nba/odds/';
+
+const PROXIES = [
+    url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+];
+
+// ==================== STATE ====================
+let games = [];
+let storedOdds = {};
+let selectedId = null;
+let isMonitoring = false;
+let refreshTimer = null;
+let countdown = 10;
+let countInterval = null;
+let alertsSent = new Set();
+let alertHistory = [];
+
+// ==================== INITIALIZATION ====================
+document.addEventListener('DOMContentLoaded', () => {
+    loadConfig();
+    updateStatus('Aguardando...', false);
+    checkNotificationPermission();
+});
+
+// ==================== CONFIG PERSISTENCE ====================
+function loadConfig() {
+    const saved = localStorage.getItem('nbaSniperConfig');
+    if (saved) {
+        const config = JSON.parse(saved);
+        CONFIG.whatsapp.phone = config.whatsapp?.phone || CONFIG.whatsapp.phone;
+        CONFIG.whatsapp.apiKey = config.whatsapp?.apiKey || '';
+        CONFIG.telegram.botToken = config.telegram?.botToken || '';
+        CONFIG.telegram.chatId = config.telegram?.chatId || '';
+        CONFIG.oddsApiKey = config.oddsApiKey || '';
+        CONFIG.soundEnabled = config.soundEnabled !== false;
+        CONFIG.notificationsEnabled = config.notificationsEnabled !== false;
+
+        // Update UI
+        document.getElementById('whatsappPhone').value = CONFIG.whatsapp.phone;
+        document.getElementById('whatsappKey').value = CONFIG.whatsapp.apiKey;
+        document.getElementById('telegramToken').value = CONFIG.telegram.botToken;
+        document.getElementById('telegramChatId').value = CONFIG.telegram.chatId;
+        document.getElementById('oddsApiKey').value = CONFIG.oddsApiKey;
+
+        updateToggle('soundToggle', CONFIG.soundEnabled);
+        updateToggle('notificationToggle', CONFIG.notificationsEnabled);
+
+        showStatus('Configurações carregadas automaticamente', 'success');
+    }
+}
+
+function saveConfig() {
+    CONFIG.whatsapp.phone = document.getElementById('whatsappPhone').value;
+    CONFIG.whatsapp.apiKey = document.getElementById('whatsappKey').value;
+    CONFIG.telegram.botToken = document.getElementById('telegramToken').value;
+    CONFIG.telegram.chatId = document.getElementById('telegramChatId').value;
+    CONFIG.oddsApiKey = document.getElementById('oddsApiKey').value;
+
+    localStorage.setItem('nbaSniperConfig', JSON.stringify(CONFIG));
+    showStatus('Configurações salvas com sucesso!', 'success');
+}
+
+function updateToggle(id, active) {
+    const el = document.getElementById(id);
+    if (active) el.classList.add('active');
+    else el.classList.remove('active');
+}
+
+function toggleSound() {
+    CONFIG.soundEnabled = !CONFIG.soundEnabled;
+    updateToggle('soundToggle', CONFIG.soundEnabled);
+    saveConfig();
+}
+
+function toggleNotifications() {
+    CONFIG.notificationsEnabled = !CONFIG.notificationsEnabled;
+    updateToggle('notificationToggle', CONFIG.notificationsEnabled);
+    if (CONFIG.notificationsEnabled) {
+        requestNotificationPermission();
+    }
+    saveConfig();
+}
+
+// ==================== NOTIFICATIONS ====================
+async function requestNotificationPermission() {
+    if ('Notification' in window) {
+        if (Notification.permission === 'granted') {
+            showStatus('Notificações já permitidas', 'success');
+        } else if (Notification.permission !== 'denied') {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                showStatus('Notificações ativadas!', 'success');
+            } else {
+                showStatus('Notificações bloqueadas', 'warning');
+            }
+        }
+    }
+}
+
+function checkNotificationPermission() {
+    if ('Notification' in window) {
+        if (Notification.permission === 'granted') {
+            updateToggle('notificationToggle', true);
+        }
+    }
+}
+
+function showBrowserNotification(title, body) {
+    if (CONFIG.notificationsEnabled && Notification.permission === 'granted') {
+        new Notification(title, {
+            body: body,
+            icon: '🏀',
+            badge: '🏀',
+            tag: 'nba-sniper',
+            requireInteraction: true
+        });
+    }
+}
+
+// ==================== SOUND ALERT ====================
+const ALERT_SOUND = 'data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU'; // Short beep
+
+function playAlertSound() {
+    if (!CONFIG.soundEnabled) return;
+
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+    } catch (e) {
+        console.log('Audio not supported');
+    }
+}
+
+// ==================== UI FUNCTIONS ====================
+function showStatus(msg, type = 'loading') {
+    const icons = { success:'✅', error:'❌', loading:'⏳', warning:'⚠️' };
+    document.getElementById('statusContainer').innerHTML =
+        `<div class="status-message status-${type}"><span>${icons[type]||''}</span><span>${msg}</span></div>`;
+
+    if (type !== 'loading') {
+        setTimeout(() => {
+            document.getElementById('statusContainer').innerHTML = '';
+        }, 5000);
+    }
+}
+
+function updateStatus(text, active) {
+    document.getElementById('statusText').textContent = text;
+    const dot = document.getElementById('statusDot');
+    if (active) {
+        dot.classList.remove('inactive');
+    } else {
+        dot.classList.add('inactive');
+    }
+}
+
+function toggleConfig() {
+    const panel = document.getElementById('configPanel');
+    panel.classList.toggle('hidden');
+}
+
+function toggleHistory() {
+    const panel = document.getElementById('historyPanel');
+    panel.classList.toggle('hidden');
+}
+
+function showAlertToast(message) {
+    const toast = document.getElementById('alertToast');
+    document.getElementById('alertToastBody').innerHTML = message;
+    toast.classList.remove('hidden');
+
+    setTimeout(() => {
+        toast.classList.add('hidden');
+    }, 15000);
+}
+
+function addToHistory(alertText) {
+    const time = new Date().toLocaleTimeString('pt-BR');
+    alertHistory.unshift({ time, text: alertText });
+
+    if (alertHistory.length > 50) alertHistory.pop();
+
+    const container = document.getElementById('alertHistory');
+    if (alertHistory.length === 1) {
+        container.innerHTML = '';
+    }
+
+    const item = document.createElement('div');
+    item.className = 'alert-item';
+    item.innerHTML = `
+        <div class="alert-item-time">${time}</div>
+        <div class="alert-item-text">${alertText}</div>
+    `;
+
+    if (container.querySelector('.empty-state')) {
+        container.innerHTML = '';
+    }
+
+    container.insertBefore(item, container.firstChild);
+}
+
+// ==================== API FETCH ====================
+async function safeFetch(url) {
+    try {
+        const r = await fetch(url, { headers: { Accept: 'application/json' } });
+        if (r.ok) return await r.json();
+    } catch (_) {}
+
+    for (const mkProxy of PROXIES) {
+        try {
+            const r = await fetch(mkProxy(url), { headers: { Accept: 'application/json' } });
+            if (r.ok) {
+                const txt = await r.text();
+                return JSON.parse(txt);
+            }
+        } catch (_) {}
+    }
+    throw new Error('Falha ao buscar dados');
+}
+
+// ==================== MONITORING ====================
+function startMonitoring() {
+    if (isMonitoring) return;
+
+    saveConfig();
+    isMonitoring = true;
+
+    document.getElementById('startBtn').style.display = 'none';
+    document.getElementById('stopBtn').style.display = 'flex';
+    document.getElementById('configPanel').classList.add('hidden');
+
+    updateStatus('Monitorando...', true);
+    showStatus('Monitoramento iniciado! Buscando jogos...', 'success');
+
+    loadGames();
+
+    countInterval = setInterval(() => {
+        countdown--;
+        if (countdown <= 0) {
+            countdown = 10;
+            refreshGames();
+        }
+        updateStatus(`Atualizando em ${countdown}s...`, true);
+    }, 1000);
+}
+
+function stopMonitoring() {
+    isMonitoring = false;
+    if (countInterval) clearInterval(countInterval);
+
+    document.getElementById('startBtn').style.display = 'flex';
+    document.getElementById('stopBtn').style.display = 'none';
+
+    updateStatus('Parado', false);
+    showStatus('Monitoramento parado', 'warning');
+}
+
+async function loadGames() {
+    if (!isMonitoring) return;
+
+    showStatus('Buscando jogos da NBA...', 'loading');
+
+    try {
+        const espnData = await safeFetch(ESPN_URL);
+        const parsed = parseESPN(espnData);
+
+        if (!parsed.length) {
+            showStatus('Nenhum jogo encontrado para hoje', 'warning');
+            document.getElementById('emptyState').style.display = 'block';
+            return;
+        }
+
+        // Load odds if API key exists
+        if (CONFIG.oddsApiKey) {
+            try {
+                const oddsRaw = await safeFetch(`${ODDS_URL}?apiKey=${CONFIG.oddsApiKey}&regions=us&markets=h2h,totals&oddsFormat=decimal`);
+                storedOdds = parseOdds(oddsRaw);
+            } catch (e) {
+                console.log('Odds API error:', e);
+            }
+        }
+
+        games = mergeData(parsed, storedOdds);
+        renderGames();
+
+        const liveCount = games.filter(g => g.state === 'in').length;
+        const halfCount = games.filter(g => g.isHalftime).length;
+
+        document.getElementById('gamesCount').textContent =
+            `(${games.length} jogos • ${liveCount} ao vivo${halfCount ? ` • ${halfCount} intervalo` : ''})`;
+
+        document.getElementById('gamesCard').style.display = 'block';
+        document.getElementById('emptyState').style.display = 'none';
+
+        // Auto-select halftime game
+        if (!selectedId) {
+            const hg = games.find(g => g.isHalftime) || games.find(g => g.state === 'in' && g.homeLinescores.length >= 2);
+            if (hg) setTimeout(() => analyzeGame(hg.id), 500);
+        }
+
+        showStatus(`${games.length} jogos carregados`, 'success');
+
+    } catch (err) {
+        showStatus(`Erro: ${err.message}`, 'error');
+    }
+}
+
+async function refreshGames() {
+    if (!isMonitoring) return;
+
+    try {
+        const espnData = await safeFetch(ESPN_URL);
+        const parsed = parseESPN(espnData);
+        const newGames = mergeData(parsed, storedOdds);
+
+        // Check for halftime alerts
+        for (const ng of newGames) {
+            if (ng.isHalftime && ng.state === 'in') {
+                const alertKey = `halftime_${ng.id}`;
+                if (!alertsSent.has(alertKey)) {
+                    alertsSent.add(alertKey);
+                    const an = calcAnalysis(ng);
+
+                    // Send all alerts
+                    playAlertSound();
+                    showBrowserNotification('🏀 INTERVALO!', `${ng.awayTeam} x ${ng.homeTeam}`);
+                    await sendWhatsAppAlert(ng, an);
+                    await sendTelegramAlert(ng, an);
+
+                    const alertMsg = `${ng.awayTeam} x ${ng.homeTeam} - Total 1ºT: ${an.halfTot} pts`;
+                    addToHistory(alertMsg);
+                    showAlertToast(generateAlertMessage(ng, an));
+                }
+            }
+
+            // Reset alert when game ends
+            if (ng.state === 'post') {
+                alertsSent.delete(`halftime_${ng.id}`);
+            }
+        }
+
+        games = newGames;
+        renderGames();
+
+        if (selectedId) {
+            const g = games.find(x => x.id === selectedId);
+            if (g) {
+                const an = calcAnalysis(g);
+                renderAnalysis(g, an);
+            }
+        }
+
+    } catch (_) {
+        // Silent fail on refresh
+    }
+}
+
+// ==================== PARSE ESPN ====================
+function parseESPN(data) {
+    const events = data.events || data.scoreboard?.events || [];
+    const result = [];
+
+    for (const ev of events) {
+        const comp = ev.competitions?.[0];
+        if (!comp) continue;
+
+        const home = comp.competitors?.find(c => c.homeAway === 'home');
+        const away = comp.competitors?.find(c => c.homeAway === 'away');
+        if (!home || !away) continue;
+
+        const status = comp.status || ev.status || {};
+        const state = status.type?.state || 'pre';
+        const period = status.period || 0;
+        const clock = status.displayClock || '';
+        const detail = (status.type?.shortDetail || status.type?.detail || '').toLowerCase();
+        const isHalftime = detail.includes('half') || detail === 'ht';
+
+        const homeLS = (home.linescores || []).map(s => parseFloat(s.value) || 0);
+        const awayLS = (away.linescores || []).map(s => parseFloat(s.value) || 0);
+
+        result.push({
+            id: ev.id,
+            homeTeam: home.team?.displayName || home.team?.name || 'Casa',
+            awayTeam: away.team?.displayName || away.team?.name || 'Fora',
+            homeAbbr: home.team?.abbreviation || '',
+            awayAbbr: away.team?.abbreviation || '',
+            homeScore: parseInt(home.score) || 0,
+            awayScore: parseInt(away.score) || 0,
+            homeLinescores: homeLS,
+            awayLinescores: awayLS,
+            state,
+            period,
+            clock,
+            detail: status.type?.shortDetail || '',
+            isHalftime,
+            date: ev.date || ''
+        });
+    }
+    return result;
+}
+
+function parseOdds(arr) {
+    const out = {};
+    if (!Array.isArray(arr)) return out;
+    for (const g of arr) {
+        const bk = g.bookmakers?.[0];
+        if (!bk) continue;
+        let oddH = null, oddA = null, line = null;
+        for (const mk of bk.markets || []) {
+            if (mk.key === 'h2h') {
+                oddH = mk.outcomes?.find(o => o.name === g.home_team)?.price ?? null;
+                oddA = mk.outcomes?.find(o => o.name === g.away_team)?.price ?? null;
+            }
+            if (mk.key === 'totals') {
+                line = mk.outcomes?.find(o => o.name === 'Over')?.point ?? null;
+            }
+        }
+        const key = [g.home_team, g.away_team].sort().join('|||');
+        out[key] = { oddH, oddA, homeTeam: g.home_team, awayTeam: g.away_team, line };
+    }
+    return out;
+}
+
+function mergeData(espnGames, oddsMap) {
+    return espnGames.map(g => {
+        let odds = null;
+        const homeWord = g.homeTeam.split(' ').pop().toLowerCase();
+        const awayWord = g.awayTeam.split(' ').pop().toLowerCase();
+        for (const [k, v] of Object.entries(oddsMap)) {
+            const parts = k.split('|||').map(s => s.toLowerCase());
+            if (parts.some(p => p.includes(homeWord)) && parts.some(p => p.includes(awayWord))) {
+                const oddsHome = v.homeTeam.toLowerCase();
+                const favIsOddsHome = oddsHome.includes(homeWord);
+                odds = {
+                    oddHome: favIsOddsHome ? v.oddH : v.oddA,
+                    oddAway: favIsOddsHome ? v.oddA : v.oddH,
+                    line: v.line
+                };
+                break;
+            }
+        }
+        return { ...g, oddHome: odds?.oddHome || null, oddAway: odds?.oddAway || null, totalLine: odds?.line || null };
+    });
+}
+
+// ==================== RENDER GAMES ====================
+function renderGames() {
+    const cont = document.getElementById('gamesContainer');
+    cont.innerHTML = '';
+
+    for (const g of games) {
+        const card = document.createElement('div');
+        card.className = 'game-card';
+        if (g.id === selectedId) card.classList.add('selected');
+        if (g.state === 'in' && !g.isHalftime) card.classList.add('live');
+        if (g.isHalftime) card.classList.add('halftime');
+        card.id = `gc-${g.id}`;
+
+        const badge = getBadge(g);
+        const scoreTable = renderScoreTable(g);
+
+        const canAnalyze = g.state !== 'pre' && g.homeLinescores.length >= 2;
+        const analyzeBtn = canAnalyze
+            ? `<button class="btn-primary btn-sm" onclick="analyzeGame('${g.id}')" style="margin-top:12px; width:100%;">🎯 Analisar</button>`
+            : '';
+
+        card.innerHTML = `
+            <div class="game-header">
+                <div class="game-teams">${g.awayTeam} <span>vs</span> ${g.homeTeam}</div>
+                <div class="game-badges">${badge}</div>
+            </div>
+            <div class="game-score">
+                <span class="team away">${g.awayAbbr} ${g.awayScore}</span>
+                <span class="vs">×</span>
+                <span class="team home">${g.homeScore} ${g.homeAbbr}</span>
+            </div>
+            ${scoreTable}
+            ${g.isHalftime ? '<div style="margin-top:12px; padding:10px; background:rgba(245,158,11,0.2); border:1px solid #f59e0b; border-radius:6px; text-align:center; font-weight:600; color:#fbbf24;">⏸️ INTERVALO - Momento de análise!</div>' : ''}
+            ${analyzeBtn}
+        `;
+
+        cont.appendChild(card);
+    }
+}
+
+function getBadge(g) {
+    if (g.isHalftime) return '<span class="badge badge-halftime">⏸ Intervalo</span>';
+    if (g.state === 'pre') return `<span class="badge badge-pre">🕐 ${fmtTime(g.date)}</span>`;
+    if (g.state === 'post') return '<span class="badge badge-post">✓ Final</span>';
+    if (g.period >= 3) return `<span class="badge badge-live">🔴 Q${g.period} · ${g.clock}</span>`;
+    return `<span class="badge badge-live">🔴 Q${g.period} · ${g.clock}</span>`;
+}
+
+function renderScoreTable(g) {
+    if (g.state === 'pre') return '';
+    const hls = g.homeLinescores, als = g.awayLinescores;
+    const periods = Math.max(hls.length, als.length, g.period || 0);
+    if (periods === 0) return '';
+
+    const qHeaders = Array.from({length: periods}, (_, i) => `<th>Q${i+1}</th>`).join('');
+
+    const homeRow = Array.from({length: periods}, (_, i) => {
+        const hv = hls[i] ?? null;
+        if (hv === null) return `<td style="color:var(--text-muted);">-</td>`;
+        const won = als[i] !== null && hv > als[i];
+        return `<td class="${won ? 'winner' : ''}">${hv}</td>`;
+    }).join('');
+
+    const awayRow = Array.from({length: periods}, (_, i) => {
+        const av = als[i] ?? null;
+        if (av === null) return `<td style="color:var(--text-muted);">-</td>`;
+        const won = hls[i] !== null && av > hls[i];
+        return `<td class="${won ? 'winner' : ''}">${av}</td>`;
+    }).join('');
+
+    return `
+        <table class="score-table">
+            <thead><tr><th>Time</th>${qHeaders}<th>Total</th></tr></thead>
+            <tbody>
+                <tr><td>${g.awayAbbr}</td>${awayRow}<td><b>${g.awayScore}</b></td></tr>
+                <tr><td>${g.homeAbbr}</td>${homeRow}<td><b>${g.homeScore}</b></td></tr>
+            </tbody>
+        </table>
+    `;
+}
+
+function fmtTime(dateStr) {
+    if (!dateStr) return 'A definir';
+    try {
+        return new Date(dateStr).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', timeZone:'America/Sao_Paulo' });
+    } catch(_) { return ''; }
+}
+
+// ==================== ANALYSIS ====================
+function analyzeGame(gameId) {
+    const g = games.find(x => x.id === gameId);
+    if (!g) return;
+    selectedId = gameId;
+
+    document.querySelectorAll('.game-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById(`gc-${gameId}`)?.classList.add('selected');
+
+    const analysis = calcAnalysis(g);
+    renderAnalysis(g, analysis);
+
+    document.getElementById('analysisCard').classList.remove('hidden');
+    document.getElementById('analysisCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function calcAnalysis(g) {
+    const h = g.homeLinescores, a = g.awayLinescores;
+    const hQ1 = h[0]||0, hQ2 = h[1]||0, hQ3 = h[2]??null;
+    const aQ1 = a[0]||0, aQ2 = a[1]||0, aQ3 = a[2]??null;
+
+    const hasHalf = h.length >= 2 && a.length >= 2;
+    const hHalf = hQ1 + hQ2, aHalf = aQ1 + aQ2;
+    const halfTot = hHalf + aHalf;
+    const halfDif = Math.abs(hHalf - aHalf);
+
+    let favIsHome = null, fav = null;
+    if (g.oddHome && g.oddAway) {
+        favIsHome = g.oddHome < g.oddAway;
+        fav = favIsHome ? g.homeTeam : g.awayTeam;
+    }
+
+    const favHalf = favIsHome !== null ? (favIsHome ? hHalf : aHalf) : null;
+    const dogHalf = favIsHome !== null ? (favIsHome ? aHalf : hHalf) : null;
+    const favQ2 = favIsHome !== null ? (favIsHome ? hQ2 : aQ2) : null;
+    const dogQ2 = favIsHome !== null ? (favIsHome ? aQ2 : hQ2) : null;
+
+    const overCriteria = [
+        { name: 'Total 1º tempo > 106 pts', avail: hasHalf, met: hasHalf ? halfTot > 106 : null, val: hasHalf ? `${halfTot} pts` : null },
+        { name: 'Ritmo acelerado (média > 53/Q)', avail: hasHalf, met: hasHalf ? (halfTot/2) > 53 : null, val: hasHalf ? `${(halfTot/2).toFixed(1)} pts/Q` : null },
+        { name: 'Diferença ≤ 12 pts no intervalo', avail: hasHalf, met: hasHalf ? halfDif <= 12 : null, val: hasHalf ? `${halfDif} pts` : null },
+        { name: 'Linha total ≤ 228.5', avail: g.totalLine !== null, met: g.totalLine !== null ? g.totalLine <= 228.5 : null, val: g.totalLine ? `${g.totalLine}` : null }
+    ];
+
+    const favCriteria = [
+        { name: 'Favorito identificado', avail: fav !== null, met: fav !== null, val: fav ? `Favorito: ${fav}` : null },
+        { name: 'Favorito perdendo no intervalo', avail: hasHalf && fav !== null, met: (favHalf !== null && dogHalf !== null) ? favHalf < dogHalf : null, val: favHalf !== null ? `${favHalf} vs ${dogHalf}` : null },
+        { name: 'Diferença ≤ 10 pts', avail: hasHalf, met: hasHalf ? halfDif <= 10 : null, val: hasHalf ? `${halfDif} pts` : null },
+        { name: 'Favorito perdeu Q2', avail: hasHalf && fav !== null, met: (favQ2 !== null && dogQ2 !== null) ? favQ2 < dogQ2 : null, val: favQ2 !== null ? `${favQ2} vs ${dogQ2}` : null }
+    ];
+
+    const overMet = overCriteria.filter(c => c.met === true).length;
+    const favMet = favCriteria.filter(c => c.met === true).length;
+
+    const recommend = (met, avail) => {
+        if (avail < 2) return 'SEM DADOS';
+        if (met >= 3) return 'ENTRAR';
+        if (met >= 2) return 'CONSIDERAR';
+        return 'AGUARDAR';
+    };
+
+    return {
+        overCriteria, favCriteria,
+        overMet, favMet,
+        overRec: recommend(overMet, overCriteria.filter(c => c.avail).length),
+        favRec: recommend(favMet, favCriteria.filter(c => c.avail).length),
+        halfTot, halfDif, fav, hasHalf, hHalf, aHalf
+    };
+}
+
+function renderAnalysis(g, an) {
+    const recClass = r => r === 'ENTRAR' ? 'rec-entrar' : r === 'CONSIDERAR' ? 'rec-considerar' : 'rec-aguardar';
+    const recEmoji = r => r === 'ENTRAR' ? '✅' : r === 'CONSIDERAR' ? '🤔' : r === 'SEM DADOS' ? '⏳' : '❌';
+
+    const criteriaHTML = (list) => list.map(c => {
+        const cls = !c.avail ? 'pending' : c.met === true ? 'met' : c.met === false ? 'not-met' : 'pending';
+        const icon = !c.avail ? '–' : c.met === true ? '✓' : c.met === false ? '✕' : '?';
+        return `
+            <div class="criteria-item ${cls}">
+                <div class="criteria-icon ${cls}">${icon}</div>
+                <div class="criteria-text">
+                    <div class="criteria-name">${c.name}</div>
+                    ${c.val ? `<div class="criteria-value">📊 ${c.val}</div>` : ''}
+                </div>
+            </div>`;
+    }).join('');
+
+    const badge = getBadge(g);
+
+    document.getElementById('analysisContainer').innerHTML = `
+        <div class="analysis-header">
+            <div>
+                <div class="analysis-title">🏀 ${g.awayTeam} vs ${g.homeTeam}</div>
+                <div style="color:var(--text-secondary); font-size:14px; margin-top:4px;">
+                    ${an.fav ? `Favorito: ${an.fav}` : 'Sem odds carregadas'}
+                    ${an.hasHalf ? ` • Intervalo: ${g.awayAbbr} ${an.aHalf} × ${an.hHalf} ${g.homeAbbr} • Total: ${an.halfTot} pts` : ''}
+                </div>
+            </div>
+            <div>${badge}</div>
+        </div>
+
+        <div class="analysis-grid">
+            <div class="analysis-section">
+                <div class="analysis-section-title over-title">📈 OVER 3º QUARTO</div>
+                <div class="criteria-list">${criteriaHTML(an.overCriteria)}</div>
+                <div class="recommendation-box ${recClass(an.overRec)}">
+                    <div class="rec-label">Recomendação</div>
+                    <div class="rec-value">${recEmoji(an.overRec)} ${an.overRec}</div>
+                </div>
+            </div>
+
+            <div class="analysis-section">
+                <div class="analysis-section-title fav-title">🏆 FAVORITO</div>
+                <div class="criteria-list">${criteriaHTML(an.favCriteria)}</div>
+                <div class="recommendation-box ${recClass(an.favRec)}">
+                    <div class="rec-label">Recomendação</div>
+                    <div class="rec-value">${recEmoji(an.favRec)} ${an.favRec}</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ==================== ALERTS ====================
+function generateAlertMessage(g, an) {
+    return `
+        <strong>${g.awayTeam} × ${g.homeTeam}</strong><br>
+        📊 Placar: ${g.awayScore} × ${g.homeScore}<br>
+        ⏱️ Intervalo! Total 1ºT: <strong>${an.halfTot} pts</strong><br>
+        📈 OVER: ${an.overRec} • 🏆 FAV: ${an.favRec}
+    `;
+}
+
+async function sendWhatsAppAlert(g, an) {
+    const phone = CONFIG.whatsapp.phone || document.getElementById('whatsappPhone').value;
+    const apiKey = CONFIG.whatsapp.apiKey || document.getElementById('whatsappKey').value;
+
+    if (!phone || !apiKey) {
+        console.warn('WhatsApp não configurado');
+        return;
+    }
+
+    const hHalf = (g.homeLinescores[0]||0) + (g.homeLinescores[1]||0);
+    const aHalf = (g.awayLinescores[0]||0) + (g.awayLinescores[1]||0);
+    const halfTot = hHalf + aHalf;
+    const halfDif = Math.abs(hHalf - aHalf);
+    const avgPtsQ = (halfTot / 2).toFixed(1);
+
+    let msg = `🏀 *NBA SNIPER PRO — INTERVALO!*\n`;
+    msg += `━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `🏟️ *${g.awayTeam} x ${g.homeTeam}*\n`;
+    msg += `📊 Placar: *${g.awayScore} x ${g.homeScore}*\n\n`;
+    msg += `📋 PONTOS POR QUARTO:\n`;
+    msg += `Q1: ${g.awayAbbr} ${g.awayLinescores[0]||0} x ${g.homeLinescores[0]||0} ${g.homeAbbr}\n`;
+    msg += `Q2: ${g.awayAbbr} ${g.awayLinescores[1]||0} x ${g.homeLinescores[1]||0} ${g.homeAbbr}\n`;
+    msg += `Total 1º tempo: *${halfTot} pts* | Diferença: ${halfDif} pts\n`;
+    msg += `📈 Média: *${avgPtsQ} pts/Q*\n\n`;
+    msg += `🎯 ANÁLISE:\n`;
+    msg += `OVER: *${an.overRec}* (${an.overMet}/${an.overCriteria.length})\n`;
+    msg += `FAVORITO: *${an.favRec}* (${an.favMet}/${an.favCriteria.length})`;
+
+    const encoded = encodeURIComponent(msg);
+    const callUrl = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encoded}&apikey=${apiKey}`;
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(callUrl)}`;
+
+    try {
+        await fetch(proxyUrl, { mode: 'cors' });
+        console.log('WhatsApp alert sent');
+    } catch (e) {
+        console.error('WhatsApp error:', e);
+    }
+}
+
+async function sendTelegramAlert(g, an) {
+    const botToken = CONFIG.telegram.botToken || document.getElementById('telegramToken').value;
+    const chatId = CONFIG.telegram.chatId || document.getElementById('telegramChatId').value;
+
+    if (!botToken || !chatId) {
+        console.warn('Telegram não configurado');
+        return;
+    }
+
+    const hHalf = (g.homeLinescores[0]||0) + (g.homeLinescores[1]||0);
+    const aHalf = (g.awayLinescores[0]||0) + (g.awayLinescores[1]||0);
+    const halfTot = hHalf + aHalf;
+    const halfDif = Math.abs(hHalf - aHalf);
+    const avgPtsQ = (halfTot / 2).toFixed(1);
+
+    let msg = `🏀 *NBA SNIPER PRO — INTERVALO!*\n`;
+    msg += `━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `🏟️ *${g.awayTeam} x ${g.homeTeam}*\n`;
+    msg += `📊 Placar: *${g.awayScore} x ${g.homeScore}*\n\n`;
+    msg += `📋 *PONTOS POR QUARTO:*\n`;
+    msg += `Q1: ${g.awayAbbr} ${g.awayLinescores[0]||0} x ${g.homeLinescores[0]||0} ${g.homeAbbr}\n`;
+    msg += `Q2: ${g.awayAbbr} ${g.awayLinescores[1]||0} x ${g.homeLinescores[1]||0} ${g.homeAbbr}\n`;
+    msg += `Total 1º tempo: *${halfTot} pts* | Diferença: ${halfDif} pts\n`;
+    msg += `📈 Média: *${avgPtsQ} pts/Q*\n\n`;
+    msg += `🎯 *ANÁLISE:*\n`;
+    msg += `OVER: *${an.overRec}* (${an.overMet}/${an.overCriteria.length})\n`;
+    msg += `FAVORITO: *${an.favRec}* (${an.favMet}/${an.favCriteria.length})`;
+
+    const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+    try {
+        await fetch(telegramUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: chatId, text: msg, parse_mode: 'Markdown' })
+        });
+        console.log('Telegram alert sent');
+    } catch (e) {
+        console.error('Telegram error:', e);
+    }
+}
+
+// ==================== TEST FUNCTIONS ====================
+async function testWhatsApp() {
+    const phone = CONFIG.whatsapp.phone || document.getElementById('whatsappPhone').value;
+    const apiKey = CONFIG.whatsapp.apiKey || document.getElementById('whatsappKey').value;
+
+    if (!apiKey) {
+        showStatus('⚠️ Insira a API Key do WhatsApp', 'warning');
+        return;
+    }
+
+    showStatus('📤 Enviando teste WhatsApp...', 'loading');
+
+    const msg = `🏀 *NBA SNIPER PRO v6*\nTeste de conexão bem-sucedido! ✅\nAlertas estão ATIVOS!`;
+    const encoded = encodeURIComponent(msg);
+    const callUrl = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encoded}&apikey=${apiKey}`;
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(callUrl)}`;
+
+    try {
+        await fetch(proxyUrl, { mode: 'cors' });
+        showStatus('✅ WhatsApp configurado! Verifique sua mensagem.', 'success');
+    } catch (e) {
+        showStatus('❌ Erro ao enviar. Verifique a API Key.', 'error');
+    }
+}
+
+async function testTelegram() {
+    const botToken = CONFIG.telegram.botToken || document.getElementById('telegramToken').value;
+    const chatId = CONFIG.telegram.chatId || document.getElementById('telegramChatId').value;
+
+    if (!botToken || !chatId) {
+        showStatus('⚠️ Preencha Token e Chat ID do Telegram', 'warning');
+        return;
+    }
+
+    showStatus('📤 Enviando teste Telegram...', 'loading');
+
+    const msg = '🏀 *NBA SNIPER PRO v6*\nTeste de conexão Telegram bem-sucedido! ✅\nAlertas estão ATIVOS!';
+    const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+    try {
+        const response = await fetch(telegramUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: chatId, text: msg, parse_mode: 'Markdown' })
+        });
+        const data = await response.json();
+        if (data.ok) {
+            showStatus('✅ Telegram configurado! Verifique sua mensagem.', 'success');
+        } else {
+            showStatus(`❌ Erro: ${data.description}`, 'error');
+        }
+    } catch (e) {
+        showStatus('❌ Erro ao enviar. Verifique Token e Chat ID.', 'error');
+    }
+}
+
+console.log('%c🏀 NBA SNIPER PRO v6', 'font-size:20px; font-weight:bold; color:#22c55e;');
+console.log('%cAlertas automáticos ativados', 'color:#94a3b8;');
+</script>
+</body>
+</html>
